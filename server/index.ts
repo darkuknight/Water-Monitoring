@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
 import { createReport, listReports } from "./routes/reports";
-import { handleSensors } from "./routes/sensors";
+import { handleSensors, sendData } from "./routes/sensors";
 
 export function createServer() {
   const app = express();
@@ -27,6 +27,7 @@ export function createServer() {
 
   // Sensors API (simulated with optional TB integration)
   app.get("/api/sensors", handleSensors);
+  app.post("/api/sensors", sendData);
 
   return app;
 }
