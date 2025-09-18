@@ -11,7 +11,9 @@ const symptomsOptions = [
 ];
 
 export default function CommunityReport() {
-  const [date, setDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState<string>(
+    new Date().toISOString().slice(0, 10),
+  );
   const [location, setLocation] = useState("");
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [affectedCount, setAffectedCount] = useState<number>(0);
@@ -20,7 +22,9 @@ export default function CommunityReport() {
 
   const toggleSymptom = (symptom: string) => {
     setSymptoms((prev) =>
-      prev.includes(symptom) ? prev.filter((s) => s !== symptom) : [...prev, symptom],
+      prev.includes(symptom)
+        ? prev.filter((s) => s !== symptom)
+        : [...prev, symptom],
     );
   };
 
@@ -31,7 +35,13 @@ export default function CommunityReport() {
       const res = await fetch("/api/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date, location, symptoms, affectedCount, notes }),
+        body: JSON.stringify({
+          date,
+          location,
+          symptoms,
+          affectedCount,
+          notes,
+        }),
       });
       if (!res.ok) throw new Error("Failed to submit");
       setStatus("Submitted successfully");
@@ -46,9 +56,12 @@ export default function CommunityReport() {
 
   return (
     <section className="mx-auto max-w-2xl">
-      <h1 className="text-2xl md:text-3xl font-bold mb-2">Community Reporting</h1>
+      <h1 className="text-2xl md:text-3xl font-bold mb-2">
+        Community Reporting
+      </h1>
       <p className="text-foreground/70 mb-6">
-        Help health officials by submitting observations. Data is stored securely.
+        Help health officials by submitting observations. Data is stored
+        securely.
       </p>
 
       <form onSubmit={handleSubmit} className="grid gap-4 md:gap-6">
@@ -94,12 +107,16 @@ export default function CommunityReport() {
           </div>
         </div>
         <div className="grid gap-2">
-          <label className="text-sm font-medium">Number of Affected Individuals</label>
+          <label className="text-sm font-medium">
+            Number of Affected Individuals
+          </label>
           <input
             type="number"
             min={0}
             value={affectedCount}
-            onChange={(e) => setAffectedCount(parseInt(e.target.value || "0", 10))}
+            onChange={(e) =>
+              setAffectedCount(parseInt(e.target.value || "0", 10))
+            }
             className="w-full rounded-md border bg-background px-3 py-2"
             required
           />
@@ -114,7 +131,9 @@ export default function CommunityReport() {
           />
         </div>
         <div className="flex items-center gap-3">
-          <Button type="submit" className="px-6">Submit Report</Button>
+          <Button type="submit" className="px-6">
+            Submit Report
+          </Button>
           <span className="text-sm text-foreground/60">{status}</span>
         </div>
       </form>

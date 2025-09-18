@@ -15,7 +15,10 @@ export default function Layout() {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
       <header className="sticky top-0 z-40 border-b bg-card/80 backdrop-blur">
         <div className="container mx-auto flex h-16 items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-2 font-extrabold text-xl">
+          <Link
+            to="/"
+            className="flex items-center gap-2 font-extrabold text-xl"
+          >
             <Droplets className="text-primary" />
             <span>Smart Health Surveillance</span>
           </Link>
@@ -49,12 +52,10 @@ export default function Layout() {
       <footer className="mt-10 border-t bg-card/60">
         <div className="container mx-auto py-6 text-sm text-foreground/70 flex flex-col md:flex-row items-center justify-between gap-4">
           <p>
-            © {new Date().getFullYear()} Smart Health Surveillance & Early Warning
-            System
+            © {new Date().getFullYear()} Smart Health Surveillance & Early
+            Warning System
           </p>
-          <p>
-            Built with React, Express, MongoDB, and Builder.io
-          </p>
+          <p>Built with React, Express, MongoDB, and Builder.io</p>
         </div>
       </footer>
     </div>

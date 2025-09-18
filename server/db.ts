@@ -19,7 +19,9 @@ export async function getDb(): Promise<Db> {
   return db;
 }
 
-export async function getCollection<T = any>(name: string): Promise<Collection<T>> {
+export async function getCollection<T = any>(
+  name: string,
+): Promise<Collection<T>> {
   const database = await getDb();
   return database.collection<T>(name);
 }

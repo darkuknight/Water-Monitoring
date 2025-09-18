@@ -40,13 +40,31 @@ function useSensorsPoll(intervalMs = 3000) {
   return { latest, history };
 }
 
-function Gauge({ value, min = 0, max = 100, label, unit, color }: { value: number; min?: number; max?: number; label: string; unit?: string; color: string }) {
+function Gauge({
+  value,
+  min = 0,
+  max = 100,
+  label,
+  unit,
+  color,
+}: {
+  value: number;
+  min?: number;
+  max?: number;
+  label: string;
+  unit?: string;
+  color: string;
+}) {
   const pct = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
   return (
     <div className="rounded-xl border bg-card p-4 md:p-6">
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-medium text-foreground/70">{label}</span>
-        <span className="text-sm text-foreground/60">{min}{unit} – {max}{unit}</span>
+        <span className="text-sm text-foreground/60">
+          {min}
+          {unit} – {max}
+          {unit}
+        </span>
       </div>
       <div className="relative h-3 w-full overflow-hidden rounded-full bg-secondary">
         <div
@@ -69,11 +87,12 @@ function AlertBanner({ latest }: { latest?: SensorData }) {
   if (ph < 6.5 || ph > 8.5) issues.push(`pH out of safe range (${ph})`);
   if (turbidity > 5) issues.push(`High turbidity (${turbidity} NTU)`);
   if (temperature > 35) issues.push(`High temperature (${temperature}°C)`);
-  if (issues.length === 0) return (
-    <div className="rounded-lg border bg-green-50 text-green-900 px-4 py-3">
-      All readings within safe thresholds.
-    </div>
-  );
+  if (issues.length === 0)
+    return (
+      <div className="rounded-lg border bg-green-50 text-green-900 px-4 py-3">
+        All readings within safe thresholds.
+      </div>
+    );
   return (
     <div className="rounded-lg border border-destructive/50 bg-red-50 text-red-900 px-4 py-3 flex items-start gap-3">
       <AlertTriangle className="mt-0.5 text-destructive" />
@@ -94,7 +113,12 @@ export default function Index() {
   const chartData = useMemo(
     () =>
       history.map((h) => ({
-        time: new Date(h.timestamp).toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+        time: new Date(h.timestamp).toLocaleTimeString([], {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }),
         ph: h.data.ph,
         turbidity: h.data.turbidity,
         temperature: h.data.temperature,
@@ -106,23 +130,54 @@ export default function Index() {
     if (!latest) return "Unknown";
     const { ph, turbidity, temperature } = latest.data;
     const riskScore =
-      (ph < 6.5 || ph > 8.5 ? 1 : 0) + (turbidity > 5 ? 1 : 0) + (temperature > 35 ? 1 : 0);
-    return riskScore >= 2 ? "High Alert" : riskScore === 1 ? "Moderate" : "Low Risk";
+      (ph < 6.5 || ph > 8.5 ? 1 : 0) +
+      (turbidity > 5 ? 1 : 0) +
+      (temperature > 35 ? 1 : 0);
+    return riskScore >= 2
+      ? "High Alert"
+      : riskScore === 1
+        ? "Moderate"
+        : "Low Risk";
   }, [latest]);
 
   return (
     <section className="grid gap-6">
       <div>
-        <h1 className="text-2xl md:text-3xl font-extrabold">Smart Health Dashboard</h1>
-        <p className="text-foreground/70">Real-time water quality monitoring and early warnings</p>
+        <h1 className="text-2xl md:text-3xl font-extrabold">
+          Smart Health Dashboard
+        </h1>
+        <p className="text-foreground/70">
+          Real-time water quality monitoring and early warnings
+        </p>
       </div>
 
       <AlertBanner latest={latest} />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Gauge label="pH" value={Number(latest?.data.ph ?? 0)} min={6} max={9} unit="" color="#16a34a" />
-        <Gauge label="Turbidity" value={Number(latest?.data.turbidity ?? 0)} min={0} max={10} unit=" NTU" color="#0ea5e9" />
-        <Gauge label="Temperature" value={Number(latest?.data.temperature ?? 0)} min={10} max={45} unit="°C" color="#f59e0b" />
+        <Gauge
+          label="pH"
+          value={Number(latest?.data.ph ?? 0)}
+          min={6}
+          max={9}
+          unit=""
+          color="#16a34a"
+        />
+        <Gauge
+          label="Turbidity"
+          value={Number(latest?.data.turbidity ?? 0)}
+          min={0}
+          max={10}
+          unit=" NTU"
+          color="#0ea5e9"
+        />
+        <Gauge
+          label="Temperature"
+          value={Number(latest?.data.temperature ?? 0)}
+          min={10}
+          max={45}
+          unit="°C"
+          color="#f59e0b"
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -133,14 +188,35 @@ export default function Index() {
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ left: 8, right: 8, bottom: 8 }}>
+              <LineChart
+                data={chartData}
+                margin={{ left: 8, right: 8, bottom: 8 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="time" />
                 <YAxis />
                 <Tooltip />
-                <Line type="monotone" dataKey="ph" stroke="#16a34a" dot={false} name="pH" />
-                <Line type="monotone" dataKey="turbidity" stroke="#0ea5e9" dot={false} name="Turbidity" />
-                <Line type="monotone" dataKey="temperature" stroke="#f59e0b" dot={false} name="Temperature" />
+                <Line
+                  type="monotone"
+                  dataKey="ph"
+                  stroke="#16a34a"
+                  dot={false}
+                  name="pH"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="turbidity"
+                  stroke="#0ea5e9"
+                  dot={false}
+                  name="Turbidity"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="temperature"
+                  stroke="#f59e0b"
+                  dot={false}
+                  name="Temperature"
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -153,7 +229,9 @@ export default function Index() {
           <div className="rounded-lg bg-secondary p-4">
             <p className="text-sm text-foreground/70 mb-2">Risk Level</p>
             <div className="text-2xl font-bold">{riskLabel}</div>
-            <p className="text-xs text-foreground/60 mt-2">This is a visual placeholder for ML output integration.</p>
+            <p className="text-xs text-foreground/60 mt-2">
+              This is a visual placeholder for ML output integration.
+            </p>
           </div>
           <div className="mt-4">
             <div className="text-sm font-medium mb-2">Recent distribution</div>
