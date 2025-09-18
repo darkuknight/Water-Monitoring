@@ -21,5 +21,12 @@ export function createServer() {
 
   app.get("/api/demo", handleDemo);
 
+  // Reports API
+  app.post("/api/reports", createReport);
+  app.get("/api/reports", listReports);
+
+  // Sensors API (simulated with optional TB integration)
+  app.get("/api/sensors", handleSensors);
+
   return app;
 }
