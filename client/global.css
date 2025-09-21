@@ -1,7 +1,27 @@
 /** @import must precede all other statements */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap");
+@import url("https://unpkg.com/leaflet@1.7.1/dist/leaflet.css");
 
 @tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fix Leaflet map z-index issues */
+.leaflet-container {
+  z-index: 0 !important;
+}
+
+.leaflet-control-container {
+  z-index: 10 !important;
+}
+
+.leaflet-popup {
+  z-index: 20 !important;
+}
+
+.leaflet-tooltip {
+  z-index: 15 !important;
+}
 @tailwind components;
 @tailwind utilities;
 

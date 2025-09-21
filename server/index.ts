@@ -2,8 +2,13 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
-import { createReport, listReports } from "./routes/reports";
+import { createReport, listReports, validateLocation } from "./routes/reports";
 import { handleSensors, sendData } from "./routes/sensors";
+import {
+  addLocationRisk,
+  getLocationRisks,
+  deleteLocationRisk,
+} from "./routes/analytics";
 
 export function createServer() {
   const app = express();
@@ -24,10 +29,16 @@ export function createServer() {
   // Reports API
   app.post("/api/reports", createReport);
   app.get("/api/reports", listReports);
+  app.get("/api/reports/validate-location", validateLocation);
 
   // Sensors API (simulated with optional TB integration)
   app.get("/api/sensors", handleSensors);
   app.post("/api/sensors", sendData);
+
+  // Analytics API (location risk data)
+  app.post("/api/analytics", addLocationRisk);
+  app.get("/api/analytics", getLocationRisks);
+  app.delete("/api/analytics/:id", deleteLocationRisk);
 
   return app;
 }
