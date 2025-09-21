@@ -55,7 +55,7 @@ export default function Layout() {
             © {new Date().getFullYear()} Smart Health Surveillance & Early
             Warning System
           </p>
-          <p>Built with React, Express, MongoDB, and Builder.io</p>
+          <p>Obsidian</p>
         </div>
       </footer>
     </div>
