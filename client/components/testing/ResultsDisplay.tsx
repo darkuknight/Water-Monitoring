@@ -22,27 +22,34 @@ import {
   calculateWaterTestRisk,
   getRiskCategory,
 } from "@shared/utils/risk-calculation";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import LocationSelector from "@/components/LocationSelector";
 
 interface ResultsDisplayProps {
   results: KitTestResult;
   onRunNewTest: () => void;
   onBackToKitSelection: () => void;
-  location: string;
-  latitude?: number;
-  longitude?: number;
 }
 
 export default function ResultsDisplay({
   results,
   onRunNewTest,
   onBackToKitSelection,
-  location,
-  latitude,
-  longitude,
 }: ResultsDisplayProps) {
   const [isSubmittingToAnalytics, setIsSubmittingToAnalytics] = useState(false);
   const [analyticsStatus, setAnalyticsStatus] = useState<string>("");
+
+  // Location state
+  const [location, setLocation] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
+  const [needsCoordinates, setNeedsCoordinates] = useState(false);
+  const [locationValidation, setLocationValidation] = useState<{
+    needsCoordinates: boolean;
+    reason: string;
+    suggestions?: Array<{ name: string; latitude: number; longitude: number }>;
+  } | null>(null);
+  const [isValidatingLocation, setIsValidatingLocation] = useState(false);
 
   const getRiskColor = (risk: "low" | "medium" | "high") => {
     switch (risk) {
@@ -82,34 +89,118 @@ export default function ResultsDisplay({
 
   // Calculate risk for analytics
   const riskPercentage = calculateWaterTestRisk(results);
+
+  // Location validation function
+  const validateLocation = useCallback(async (locationText: string) => {
+    if (!locationText.trim()) {
+      setLocationValidation(null);
+      setNeedsCoordinates(false);
+      return;
+    }
+
+    setIsValidatingLocation(true);
+    setLocationValidation({
+      needsCoordinates: false,
+      reason: "Validating location...",
+    });
+
+    try {
+      const response = await fetch(
+        `/api/geocode?q=${encodeURIComponent(locationText)}`,
+      );
+      const data = await response.json();
+
+      if (data.success && data.coordinates) {
+        setLocationValidation({
+          needsCoordinates: false,
+          reason: `✓ Location found: ${data.displayName || locationText}`,
+        });
+        setNeedsCoordinates(false);
+        // Optionally auto-fill coordinates
+        if (data.coordinates.lat && data.coordinates.lon) {
+          setLatitude(data.coordinates.lat.toString());
+          setLongitude(data.coordinates.lon.toString());
+        }
+      } else {
+        setLocationValidation({
+          needsCoordinates: true,
+          reason: "Location not found. Please provide coordinates manually.",
+          suggestions: data.suggestions || [],
+        });
+        setNeedsCoordinates(true);
+      }
+    } catch (error) {
+      console.error("Location validation error:", error);
+      setLocationValidation({
+        needsCoordinates: true,
+        reason:
+          "Unable to validate location. Please provide coordinates manually.",
+      });
+      setNeedsCoordinates(true);
+    } finally {
+      setIsValidatingLocation(false);
+    }
+  }, []);
+
+  // Validate location when it changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (location.trim()) {
+        validateLocation(location);
+      }
+    }, 500); // Debounce validation
+
+    return () => clearTimeout(timeoutId);
+  }, [location, validateLocation]);
   const riskCategory = getRiskCategory(riskPercentage);
 
   const handleSubmitToAnalytics = async () => {
+    // Validate location before submitting
+    if (!location.trim()) {
+      setAnalyticsStatus("Please enter a location before submitting.");
+      setTimeout(() => setAnalyticsStatus(""), 3000);
+      return;
+    }
+
+    // Check if location validation failed and coordinates are required but missing
+    if (locationValidation?.needsCoordinates && (!latitude || !longitude)) {
+      setAnalyticsStatus(
+        "Please provide valid location coordinates before submitting.",
+      );
+      setTimeout(() => setAnalyticsStatus(""), 3000);
+      return;
+    }
+
+    // Check if location is still being validated
+    if (isValidatingLocation) {
+      setAnalyticsStatus("Please wait for location validation to complete.");
+      setTimeout(() => setAnalyticsStatus(""), 3000);
+      return;
+    }
+
     setIsSubmittingToAnalytics(true);
     setAnalyticsStatus("Submitting water test data to analytics...");
 
     try {
       const submitData: any = {
         location,
-        riskPercentage: riskPercentage, // Fixed: use riskPercentage instead of riskLevel
-        source: "kit analysis",
-        metadata: {
-          kit: results.kit.kit,
-          overallRisk: results.overallRisk,
-          confidence: results.confidence,
-          criticalParameters: criticalResults.length,
-          totalParameters: results.results.length,
-          testDate: new Date().toISOString().slice(0, 10),
-        },
+        kit: results.kit.kit,
+        overallRisk: results.overallRisk,
+        confidence: results.confidence,
+        criticalParameters: criticalResults.length,
+        totalParameters: results.results.length,
+        testDate: new Date().toISOString().slice(0, 10),
+        riskPercentage: riskPercentage, // Send the calculated risk percentage
+        notes: `Water test conducted using ${results.kit.kit}. Overall risk: ${results.overallRisk}. Confidence: ${confidencePercentage}%`,
       };
 
       // Include coordinates if available
-      if (latitude && longitude) {
-        submitData.latitude = latitude;
-        submitData.longitude = longitude;
+      if (needsCoordinates && latitude && longitude) {
+        submitData.latitude = parseFloat(latitude);
+        submitData.longitude = parseFloat(longitude);
       }
 
-      const response = await fetch("/api/analytics", {
+      const response = await fetch("/api/water-tests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(submitData),
@@ -369,50 +460,70 @@ export default function ResultsDisplay({
           </CardTitle>
           <CardDescription>
             Add this water test data to the community analytics and risk mapping
-            system
+            system. First, provide the location where this test was conducted.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div>
-              <strong>Location:</strong>
-              <p className="text-gray-700">{location}</p>
-            </div>
-            <div>
-              <strong>Risk Level:</strong>
-              <div className="flex items-center gap-2 mt-1">
-                <div
-                  className={`px-2 py-1 rounded-full text-xs font-bold text-white ${
-                    riskPercentage >= 70
-                      ? "bg-red-500"
-                      : riskPercentage >= 40
-                        ? "bg-yellow-500"
-                        : "bg-green-500"
-                  }`}
-                >
-                  {riskPercentage}%
+          {/* Location Input Section */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold">Location Information</h3>
+            <LocationSelector
+              location={location}
+              setLocation={setLocation}
+              latitude={latitude}
+              setLatitude={setLatitude}
+              longitude={longitude}
+              setLongitude={setLongitude}
+              needsCoordinates={needsCoordinates}
+              setNeedsCoordinates={setNeedsCoordinates}
+              locationValidation={locationValidation}
+              isValidatingLocation={isValidatingLocation}
+            />
+          </div>
+
+          {/* Test Summary - only show when location is provided */}
+          {location.trim() && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <strong>Location:</strong>
+                <p className="text-gray-700">{location}</p>
+              </div>
+              <div>
+                <strong>Risk Level:</strong>
+                <div className="flex items-center gap-2 mt-1">
+                  <div
+                    className={`px-2 py-1 rounded-full text-xs font-bold text-white ${
+                      riskPercentage >= 70
+                        ? "bg-red-500"
+                        : riskPercentage >= 40
+                          ? "bg-yellow-500"
+                          : "bg-green-500"
+                    }`}
+                  >
+                    {riskPercentage}%
+                  </div>
+                  <span
+                    className={`text-sm font-medium ${
+                      riskPercentage >= 70
+                        ? "text-red-600"
+                        : riskPercentage >= 40
+                          ? "text-yellow-600"
+                          : "text-green-600"
+                    }`}
+                  >
+                    {riskCategory}
+                  </span>
                 </div>
-                <span
-                  className={`text-sm font-medium ${
-                    riskPercentage >= 70
-                      ? "text-red-600"
-                      : riskPercentage >= 40
-                        ? "text-yellow-600"
-                        : "text-green-600"
-                  }`}
-                >
-                  {riskCategory}
-                </span>
+              </div>
+              <div>
+                <strong>Test Summary:</strong>
+                <p className="text-gray-700">
+                  {criticalResults.length}/{results.results.length} parameters
+                  critical
+                </p>
               </div>
             </div>
-            <div>
-              <strong>Test Summary:</strong>
-              <p className="text-gray-700">
-                {criticalResults.length}/{results.results.length} parameters
-                critical
-              </p>
-            </div>
-          </div>
+          )}
 
           {analyticsStatus && (
             <Alert
@@ -432,13 +543,21 @@ export default function ResultsDisplay({
           <div className="flex items-center gap-3">
             <Button
               onClick={handleSubmitToAnalytics}
-              disabled={isSubmittingToAnalytics}
+              disabled={
+                isSubmittingToAnalytics ||
+                !location.trim() ||
+                isValidatingLocation ||
+                (locationValidation?.needsCoordinates &&
+                  (!latitude || !longitude))
+              }
               className="flex items-center gap-2"
             >
               <MapPin className="h-4 w-4" />
               {isSubmittingToAnalytics
                 ? "Submitting..."
-                : "Add to Analytics Map"}
+                : isValidatingLocation
+                  ? "Validating Location..."
+                  : "Add to Analytics Map"}
             </Button>
             <p className="text-xs text-gray-600">
               This will create a marker on the analytics map to help track water

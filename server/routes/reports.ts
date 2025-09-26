@@ -58,58 +58,14 @@ export const createReport: RequestHandler = async (req, res) => {
     const reportsCol = await getCollection<Report>("reports");
     const { insertedId } = await reportsCol.insertOne(doc as any);
 
-    // Add to analytics if we have valid data
-    if (riskPercentage > 0) {
-      try {
-        const analyticsCol = await getCollection("locationRisks");
-
-        const locationRiskData = {
-          id: Date.now().toString(),
-          location: parsed.location,
-          latitude: coordinates?.latitude,
-          longitude: coordinates?.longitude,
-          riskPercentage,
-          timestamp: Date.now(),
-          source: "community_report", // Track the source
-          reportId: insertedId.toString(), // Link to original report
-        };
-
-        // Check if location already exists in analytics
-        const existingRisk = await analyticsCol.findOne({
-          location: { $regex: new RegExp(`^${parsed.location}$`, "i") },
-        });
-
-        if (existingRisk) {
-          // Update existing risk data with new calculated risk
-          await analyticsCol.updateOne(
-            { _id: existingRisk._id },
-            {
-              $set: {
-                ...locationRiskData,
-                _id: existingRisk._id,
-              },
-            },
-          );
-        } else {
-          // Insert new risk data
-          await analyticsCol.insertOne(locationRiskData);
-        }
-
-        console.log(
-          `Added risk data for ${parsed.location}: ${riskPercentage}% risk`,
-        );
-      } catch (analyticsError) {
-        console.error("Failed to add to analytics:", analyticsError);
-        // Don't fail the report submission if analytics fails
-      }
-    }
+    console.log(`Report saved for ${parsed.location}: ${riskPercentage}% risk`);
 
     res.status(201).json({
       id: insertedId.toString(),
       ...doc,
       message: coordinates
-        ? `Report submitted successfully. Risk level: ${riskPercentage}% added to analytics with coordinates.`
-        : `Report submitted successfully. Risk level: ${riskPercentage}% added to analytics (coordinates not found).`,
+        ? `Report submitted successfully. Risk level: ${riskPercentage}% will appear in analytics with coordinates.`
+        : `Report submitted successfully. Risk level: ${riskPercentage}% will appear in analytics (coordinates not found).`,
     });
   } catch (err: any) {
     res.status(400).json({ error: err.message ?? "Invalid request" });

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import LocationSelector from "@/components/LocationSelector";
 import {
   calculateRiskLevel,
   getRiskCategory,
@@ -171,86 +172,18 @@ export default function CommunityReport() {
           />
         </div>
         <div className="grid gap-2">
-          <label className="text-sm font-medium">Location</label>
-          <input
-            type="text"
-            placeholder="Village / Ward / Coordinates"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className="w-full rounded-md border bg-background px-3 py-2"
-            required
+          <LocationSelector
+            location={location}
+            setLocation={setLocation}
+            latitude={latitude}
+            setLatitude={setLatitude}
+            longitude={longitude}
+            setLongitude={setLongitude}
+            needsCoordinates={needsCoordinates}
+            setNeedsCoordinates={setNeedsCoordinates}
+            locationValidation={locationValidation}
+            isValidatingLocation={isValidatingLocation}
           />
-
-          {/* Location validation status */}
-          {isValidatingLocation && (
-            <div className="text-xs text-blue-600">Validating location...</div>
-          )}
-
-          {locationValidation && (
-            <div
-              className={`text-xs p-2 rounded border-l-4 ${
-                locationValidation.needsCoordinates
-                  ? "bg-yellow-50 border-l-yellow-400 text-yellow-700"
-                  : "bg-green-50 border-l-green-400 text-green-700"
-              }`}
-            >
-              {locationValidation.reason}
-              {locationValidation.suggestions && (
-                <div className="mt-1">
-                  <p className="font-medium">Did you mean:</p>
-                  <ul className="mt-1 space-y-1">
-                    {locationValidation.suggestions.map((suggestion, index) => (
-                      <li
-                        key={index}
-                        className="text-xs cursor-pointer hover:underline"
-                        onClick={() => {
-                          setLatitude(suggestion.latitude.toString());
-                          setLongitude(suggestion.longitude.toString());
-                        }}
-                      >
-                        {suggestion.name} ({suggestion.latitude.toFixed(4)},{" "}
-                        {suggestion.longitude.toFixed(4)})
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Coordinate inputs - shown when needed */}
-          {needsCoordinates && (
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              <div>
-                <label className="text-xs font-medium text-gray-600">
-                  Latitude *
-                </label>
-                <input
-                  type="number"
-                  step="any"
-                  placeholder="e.g., 40.7128"
-                  value={latitude}
-                  onChange={(e) => setLatitude(e.target.value)}
-                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                  required={needsCoordinates}
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-600">
-                  Longitude *
-                </label>
-                <input
-                  type="number"
-                  step="any"
-                  placeholder="e.g., -74.0060"
-                  value={longitude}
-                  onChange={(e) => setLongitude(e.target.value)}
-                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                  required={needsCoordinates}
-                />
-              </div>
-            </div>
-          )}
         </div>
         <div className="grid gap-2">
           <label className="text-sm font-medium">Symptoms</label>

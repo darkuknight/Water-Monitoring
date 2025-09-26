@@ -9,6 +9,17 @@ import {
   getLocationRisks,
   deleteLocationRisk,
 } from "./routes/analytics";
+import {
+  createWaterTest,
+  getWaterTests,
+  deleteWaterTest,
+  validateWaterTestLocation,
+} from "./routes/water-tests";
+import {
+  createUserData,
+  getUserData,
+  deleteUserData,
+} from "./routes/user-data";
 
 export function createServer() {
   const app = express();
@@ -39,6 +50,17 @@ export function createServer() {
   app.post("/api/analytics", addLocationRisk);
   app.get("/api/analytics", getLocationRisks);
   app.delete("/api/analytics/:id", deleteLocationRisk);
+
+  // Water Tests API
+  app.post("/api/water-tests", createWaterTest);
+  app.get("/api/water-tests", getWaterTests);
+  app.delete("/api/water-tests/:id", deleteWaterTest);
+  app.get("/api/water-tests/validate-location", validateWaterTestLocation);
+
+  // User Data API
+  app.post("/api/user-data", createUserData);
+  app.get("/api/user-data", getUserData);
+  app.delete("/api/user-data/:id", deleteUserData);
 
   return app;
 }

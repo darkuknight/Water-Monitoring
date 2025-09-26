@@ -131,7 +131,7 @@ export default function Index() {
     const { ph, turbidity, temperature } = latest.data;
     const riskScore =
       (ph < 6.5 || ph > 8.5 ? 1 : 0) +
-      (turbidity > 5 ? 1 : 0) +
+      (turbidity > 50 ? 1 : 0) +
       (temperature > 35 ? 1 : 0);
     return riskScore >= 2
       ? "High Alert"
@@ -157,8 +157,8 @@ export default function Index() {
         <Gauge
           label="pH"
           value={Number(latest?.data.ph ?? 0)}
-          min={6}
-          max={9}
+          min={0}
+          max={14}
           unit=""
           color="#16a34a"
         />
@@ -166,7 +166,7 @@ export default function Index() {
           label="Turbidity"
           value={Number(latest?.data.turbidity ?? 0)}
           min={0}
-          max={10}
+          max={200}
           unit=" NTU"
           color="#0ea5e9"
         />
@@ -174,7 +174,7 @@ export default function Index() {
           label="Temperature"
           value={Number(latest?.data.temperature ?? 0)}
           min={10}
-          max={45}
+          max={60}
           unit="°C"
           color="#f59e0b"
         />
